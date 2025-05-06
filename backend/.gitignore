@@ -1,0 +1,34 @@
+# Bytecode and caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Local environment variables
+.env
+*.env
+
+# SQLite and logs (if used temporarily)
+*.sqlite3
+*.db
+*.log
+
+# Flask instance folder
+instance/
+
+# Coverage/testing
+.pytest_cache/
+.coverage
+htmlcov/
+.cache/
+
+# IDE/editor
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
