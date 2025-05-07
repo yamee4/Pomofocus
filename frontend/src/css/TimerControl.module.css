@@ -1,0 +1,30 @@
+/* src/components/TimerControls/TimerControls.module.css */
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+  }
+  
+  .mainControl {
+      font-size: 1.5rem; /* Make start/pause bigger */
+      padding: 15px 40px;
+      min-width: 150px;
+  }
+  
+  .resetButton {
+      /* Slightly smaller or different style for reset if needed */
+      margin-left: 15px; /* Add space between buttons */
+      background-color: transparent !important; /* Make reset less prominent */
+      border: none;
+      opacity: 0.8;
+  }
+  .resetButton:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+  }
+  
+  .resetButton:hover:not(:disabled) {
+      opacity: 1;
+      background-color: transparent !important;
+  }

@@ -1,0 +1,38 @@
+
+.timerDisplay {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .modeIndicator {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: capitalize;
+  }
+  
+  .time {
+    font-size: 6rem; /* Large time display */
+    font-weight: bold;
+    line-height: 1;
+    color: white; /* White text for contrast */
+    margin-bottom: 15px;
+  }
+  
+  
+  /* Optional Progress Bar Styles */
+  .progressBarContainer {
+      height: 5px;
+      background-color: rgba(0, 0, 0, 0.2); /* Darker transparent background */
+      border-radius: 3px;
+      overflow: hidden;
+      width: 80%; /* Or adjust as needed */
+      margin: 0 auto; /* Center it */
+  }
+  
+  .progressBar {
+      height: 100%;
+      background-color: white; /* White progress */
+      border-radius: 3px;
+      transition: width 0.5s ease-in-out; /* Smooth transition */
+  }
