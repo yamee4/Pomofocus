@@ -1,7 +1,13 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation} from "react-router-dom";
+import styles from "../css/pages_css/register.module.css";
+import axios from "axios";
 
 const Register = () => {
+    const apiURL = import.meta.env.VITE_API_URL;
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -15,21 +21,35 @@ const Register = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        axios.post(`${apiURL}/api/user/register`, {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+        })
+        .then(response => {
+            // handle success, e.g., redirect or show message
+            console.log("Registration successful:", response.data);
+            navigate("/");
+        })
+        .catch(error => {
+            // handle error, e.g., show error message
+            console.error("Registration error:", error.response ? error.response.data : error.message);
+        });
         console.log("Form submitted:", formData);
     };
 
     return (
-        <div style={styles.container}>
-            <div style={styles.logoContainer}>
-                <div style={styles.logo}>✔</div>
-                <h1 style={styles.brand}>Pomofocus</h1>
-                <p style={styles.subtitle}>Create Account</p>
+        <div className={styles.container}>
+            <div className={styles.logoContainer}>
+                <div className={styles.logo}>✔</div>
+                <h1 className={styles.brand}>Pomofocus</h1>
+                <p className={styles.subtitle}>Create Account</p>
             </div>
 
-            <div style={styles.card}>
-                <form onSubmit={handleSubmit} style={styles.form}>
-                    <div style={styles.inputGroup}>
-                        <label htmlFor="name" style={styles.label}>NAME</label>
+            <div className={styles.card}>
+                <form onSubmit={handleSubmit} className={styles.form}>
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="name" className={styles.label}>NAME</label>
                         <input
                             type="text"
                             id="name"
@@ -37,12 +57,12 @@ const Register = () => {
                             placeholder="Your name"
                             value={formData.name}
                             onChange={handleChange}
-                            style={styles.input}
+                            className={styles.input}
                             required
                         />
                     </div>
-                    <div style={styles.inputGroup}>
-                        <label htmlFor="email" style={styles.label}>EMAIL</label>
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="email" className={styles.label}>EMAIL</label>
                         <input
                             type="email"
                             id="email"
@@ -50,12 +70,12 @@ const Register = () => {
                             placeholder="example@mail.com"
                             value={formData.email}
                             onChange={handleChange}
-                            style={styles.input}
+                            className={styles.input}
                             required
                         />
                     </div>
-                    <div style={styles.inputGroup}>
-                        <label htmlFor="password" style={styles.label}>PASSWORD</label>
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="password" className={styles.label}>PASSWORD</label>
                         <input
                             type="password"
                             id="password"
@@ -63,107 +83,20 @@ const Register = () => {
                             placeholder="Your password"
                             value={formData.password}
                             onChange={handleChange}
-                            style={styles.input}
+                            className={styles.input}
                             required
                         />
                     </div>
-                    <button type="submit" style={styles.button}>
+                    <button type="submit" className={styles.button}>
                         Sign up with Email
                     </button>
                 </form>
-                <p style={styles.registerText}>
-                    Already have an account? <Link to="/login" style={styles.link}>Log in</Link>
+                <p className={styles.registerText}>
+                    Already have an account? <Link to="/login" className={styles.link}>Log in</Link>
                 </p>
             </div>
         </div>
     );
-};
-
-const styles = {
-    container: {
-        backgroundColor: "#BA4949",
-        height: "100vh",
-        width: "100vw",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "1rem",
-    },
-    logoContainer: {
-        textAlign: "center",
-        marginBottom: "1.5rem",
-    },
-    logo: {
-        fontSize: "2.5rem",
-        color: "white",
-    },
-    brand: {
-        color: "white",
-        fontSize: "1.8rem",
-        fontWeight: "bold",
-        margin: 0,
-    },
-    subtitle: {
-        color: "white",
-        fontWeight: 600,
-        fontSize: "1rem",
-        marginTop: "0.25rem",
-    },
-    card: {
-        backgroundColor: "#ffffff",
-        borderRadius: "8px",
-        padding: "2rem",
-        width: "100%",
-        maxWidth: "350px",
-        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-    },
-    form: {
-        display: "flex",
-        flexDirection: "column",
-    },
-    inputGroup: {
-        marginBottom: "1rem",
-    },
-    label: {
-        fontSize: "0.75rem",
-        fontWeight: "bold",
-        color: "#666",
-        marginBottom: "0.3rem",
-        display: "block",
-        textTransform: "uppercase",
-    },
-    input: {
-        padding: "0.8rem",
-        borderRadius: "4px",
-        border: "1px solid #ccc",
-        fontSize: "1rem",
-        width: "100%",
-        backgroundColor: "#f5f5f5",
-    },
-    button: {
-        marginTop: "1rem",
-        padding: "0.9rem",
-        backgroundColor: "#333333",
-        color: "#ffffff",
-        fontSize: "1rem",
-        border: "none",
-        borderRadius: "6px",
-        cursor: "pointer",
-        fontWeight: "bold",
-        transition: "background 0.3s",
-    },
-    registerText: {
-        textAlign: "center",
-        marginTop: "1.5rem",
-        fontSize: "0.9rem",
-        color: "#555",
-    },
-    link: {
-        color: "#333",
-        textDecoration: "underline",
-        marginLeft: "0.25rem",
-    },
 };
 
 export default Register;

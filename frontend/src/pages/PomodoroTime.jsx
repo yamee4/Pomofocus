@@ -4,6 +4,7 @@ import TimerDisplay from '../components/TimerDisplay';
 import TimerControls from '../components/TimerControl';
 import Settings from '../components/Settings';
 import Button from '../components/Button'; 
+import Report from '../components/Report';
 import { useTimer, MODE } from '../hooks/useTimer';
 import styles from '../css/pages_css/pomodoro.module.css';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -28,6 +29,20 @@ function PomodoroTime() {
 
   const [settings, setSettings] = useState(loadSettings());
   const [showSettings, setShowSettings] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+
+    const [allSessions, setAllSessions] = useState([
+    // Example session data structure (replace with your actual data)
+    { date: '2024-05-10', duration: 25, type: 'work' }, // duration in minutes
+    { date: '2024-05-11', duration: 5, type: 'short_break' },
+    { date: '2024-05-11', duration: 25, type: 'work' },
+  ]);
+  const [allTasks, setAllTasks] = useState([
+    // Example task data structure (replace with your actual data)
+    { id: 1, name: 'Finish report draft', date: '2024-05-10', status: 'completed', pomodoros: 2, project: 'Project X' },
+    { id: 2, name: 'Review PR #123', date: '2024-05-11', status: 'pending', pomodoros: 1, project: 'Project Y' },
+  ]);
+
 
   const timerSettings = useMemo(() => ({
       workMinutes: settings.workMinutes,
@@ -66,11 +81,11 @@ function PomodoroTime() {
       }
   }
 
-  // Placeholder functions for new buttons
-  const handleReportClick = () => {
-    console.log("Report button clicked. Implement navigation or modal here.");
-    // Example: window.alert("Report functionality to be implemented!");
-  };
+  // // Placeholder functions for new buttons
+  // const handleReportClick = () => {
+  //   console.log("Report button clicked. Implement navigation or modal here.");
+  //   // Example: navigate('/report');
+  // };
 
   const handleSignUpClick = () => {
     navigate('/register');
@@ -83,7 +98,7 @@ function PomodoroTime() {
           <h1>Pomofocus Clone</h1>
           <div className={styles.headerActions}>
             <Button
-                onClick={handleReportClick}
+                onClick={() => setShowReport(true)}
                 variant="settingsToggle" // Base variant from Button.module.css
                 className={`${styles.headerButton} ${styles.appReportButton}`} // Added appReportButton
             >
@@ -135,6 +150,14 @@ function PomodoroTime() {
           initialSettings={settings}
           onSave={handleSaveSettings}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showReport && (
+        <Report
+          initialSessions={allSessions} // Pass the collected session data
+          initialTasks={allTasks}       // Pass the task data
+          onClose={() => setShowReport(false)}
         />
       )}
 
