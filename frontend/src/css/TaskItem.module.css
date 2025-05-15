@@ -1,0 +1,223 @@
+/* src/css/components_css/TaskItem.module.css */
+.taskItem {
+  background-color: #fff; /* White background for tasks */
+  color: #333; /* Dark text for readability */
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease, border-left-color 0.3s ease;
+  display: flex;
+  flex-direction: column; /* To stack main content and notes */
+  position: relative;
+}
+
+.taskItem:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.taskMainContent {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  cursor: default; /* Default cursor, selection handled by click */
+}
+/* Allow selection if not completed */
+.taskItem:not(.completedTask) .taskMainContent {
+    cursor: pointer;
+}
+
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #b0b0b0;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+.checkbox:hover {
+  border-color: #777;
+}
+.checkbox.checked {
+  background-color: #5cb85c; /* Green when checked */
+  border-color: #5cb85c;
+  color: white;
+}
+
+.taskName {
+  flex-grow: 1;
+  font-size: 1em;
+  color: #444;
+  padding-right: 10px; /* Space before pomodoros */
+}
+
+.taskPomodoros {
+  font-size: 0.9em;
+  color: #777;
+  white-space: nowrap;
+  margin-left: auto; /* Push to the right before actions */
+  padding: 0 10px;
+}
+.completedPomosCount {
+  font-weight: bold;
+  color: #333;
+}
+.pomodoroSeparator {
+  margin: 0 2px;
+}
+.estPomosCount {
+  color: #888;
+}
+
+.taskActions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.actionButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  margin-left: 4px; /* Spacing between action buttons */
+  color: #888;
+  transition: color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.actionButton:hover {
+  color: #333;
+}
+.actionButton svg {
+    vertical-align: middle;
+}
+.deleteButton:hover {
+  color: #d9534f; /* Red for delete action */
+}
+
+/* Active Task Styling */
+.activeTask {
+  border-left: 4px solid #c25956; /* Accent color for active task (matches work mode) */
+  background-color: #fef6f5; /* Very light shade of work mode for active task */
+}
+.activeTask .taskName {
+  font-weight: 600;
+  color: #c25956;
+}
+
+/* Completed Task Styling */
+.completedTask {
+  background-color: #f7f7f7;
+  border-color: #d0d0d0;
+}
+.completedTask .taskName {
+  text-decoration: line-through;
+  color: #aaa;
+}
+.completedTask .taskPomodoros,
+.completedTask .completedPomosCount,
+.completedTask .estPomosCount {
+  color: #bbb;
+}
+.completedTask .checkbox {
+  border-color: #5cb85c; /* Keep checkbox green */
+  background-color: #5cb85c;
+}
+
+/* Editing State */
+.editing {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+.editForm {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+    align-items: center;
+    gap: 10px;
+}
+.editInputName {
+  flex-grow: 1;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95em;
+  min-width: 150px; /* Prevent excessive shrinking */
+}
+.editPomodoroControl {
+    display: flex;
+    align-items: center;
+    font-size: 0.9em;
+    color: #555;
+}
+.editInputPomos {
+  width: 55px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+  margin-left: 5px;
+}
+.editActions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto; /* Push actions to the right if space allows */
+}
+.saveEditButton, .cancelEditButton { /* More specific styling for edit buttons */
+    padding: 7px 12px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: white;
+}
+.saveEditButton {
+    background-color: #5cb85c; /* Green */
+}
+.saveEditButton:hover {
+    background-color: #4cae4c;
+    color: white;
+}
+.cancelEditButton {
+    background-color: #f0ad4e; /* Orange/Yellow */
+}
+.cancelEditButton:hover {
+    background-color: #ec971f;
+    color: white;
+}
+
+
+/* Notes Section */
+.notesSection {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+.notesTextarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9em;
+  resize: vertical;
+  min-height: 60px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+.notesSaveButton {
+  padding: 6px 10px;
+  font-size: 0.85em;
+  background-color: #6c757d;
+  color: white;
+  border-radius: 4px;
+}
+.notesSaveButton:hover {
+  background-color: #5a6268;
+  color: white;
+}

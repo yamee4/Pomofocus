@@ -1,134 +1,215 @@
-// src/App.js
-import React, { useState, useEffect, useMemo} from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import TimerDisplay from '../components/TimerDisplay';
 import TimerControls from '../components/TimerControl';
 import Settings from '../components/Settings';
-import Button from '../components/Button'; 
+import Button from '../components/Button';
 import Report from '../components/Report';
+import TaskManager from '../components/TaskManager'; 
 import { useTimer, MODE } from '../hooks/useTimer';
 import styles from '../css/pages_css/pomodoro.module.css';
 import { useLocation, useNavigate } from 'react-router-dom';
-
-
 
 const DEFAULT_SETTINGS = {
   workMinutes: 25,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
-  longBreakInterval: 4, // Long break after 4 work sessions
+  longBreakInterval: 4,
 };
 
 function PomodoroTime() {
   const navigate = useNavigate();
-  const location = useLocation();
-  
+  // const location = useLocation(); // Not used in current snippet, keep if needed elsewhere
+
   const loadSettings = () => {
-      const saved = localStorage.getItem('pomofocusSettings');
-      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    const saved = localStorage.getItem('pomofocusSettings');
+    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
   };
 
   const [settings, setSettings] = useState(loadSettings());
   const [showSettings, setShowSettings] = useState(false);
   const [showReport, setShowReport] = useState(false);
 
-    const [allSessions, setAllSessions] = useState([
-    // Example session data structure (replace with your actual data)
-    { date: '2024-05-10', duration: 25, type: 'work' }, // duration in minutes
-    { date: '2024-05-11', duration: 5, type: 'short_break' },
-    { date: '2024-05-11', duration: 25, type: 'work' },
-  ]);
-  const [allTasks, setAllTasks] = useState([
-    // Example task data structure (replace with your actual data)
-    { id: 1, name: 'Finish report draft', date: '2024-05-10', status: 'completed', pomodoros: 2, project: 'Project X' },
-    { id: 2, name: 'Review PR #123', date: '2024-05-11', status: 'pending', pomodoros: 1, project: 'Project Y' },
-  ]);
+  // Initialize tasks state - this will be managed within PomodoroTime
+  const [tasks, setTasks] = useState(() => {
+    const savedTasks = localStorage.getItem('pomofocusTasks');
+    return savedTasks ? JSON.parse(savedTasks) : [
+      { id: Date.now() + 100, name: 'Example Task 1: Study React', estPomodoros: 3, completedPomodoros: 0, completed: false, notes: 'Focus on hooks and state.' },
+      { id: Date.now() + 200, name: 'Example Task 2: Project Planning', estPomodoros: 2, completedPomodoros: 0, completed: false, notes: '' },
+    ];
+  });
+  const [activeTaskId, setActiveTaskId] = useState(null);
+
+  // Example session data for Report
+  const [allSessions, setAllSessions] = useState(() => {
+    const savedSessions = localStorage.getItem('pomofocusSessions');
+    return savedSessions ? JSON.parse(savedSessions) : [
+      { date: '2024-05-10', duration: 25, type: 'work' },
+      { date: '2024-05-11', duration: 5, type: 'short_break' },
+    ];
+  });
 
 
   const timerSettings = useMemo(() => ({
-      workMinutes: settings.workMinutes,
-      shortBreakMinutes: settings.shortBreakMinutes,
-      longBreakMinutes: settings.longBreakMinutes,
-      longBreakInterval: settings.longBreakInterval,
+    workMinutes: settings.workMinutes,
+    shortBreakMinutes: settings.shortBreakMinutes,
+    longBreakMinutes: settings.longBreakMinutes,
+    longBreakInterval: settings.longBreakInterval,
   }), [settings]);
 
+  // MODIFIED useTimer: Added onTimerComplete callback
   const {
     mode,
     isActive,
     secondsLeft,
-    pomodoroCount,
+    pomodoroCount, // Pomodoros in current cycle for long break
     startTimer,
     pauseTimer,
     resetTimer,
     switchMode,
-    currentDuration
-  } = useTimer(timerSettings);
+    currentDuration,
+  } = useTimer(timerSettings, () => {
+    // This callback is executed when a timer (work, short break, long break) completes
+    const sessionType = mode;
+    let sessionDuration = 0;
+
+    if (sessionType === MODE.WORK) {
+      sessionDuration = settings.workMinutes;
+      if (activeTaskId) {
+        setTasks(prevTasks =>
+          prevTasks.map(task =>
+            task.id === activeTaskId && !task.completed
+              ? { ...task, completedPomodoros: (task.completedPomodoros || 0) + 1 }
+              : task
+          )
+        );
+      }
+    } else if (sessionType === MODE.SHORT_BREAK) {
+      sessionDuration = settings.shortBreakMinutes;
+    } else if (sessionType === MODE.LONG_BREAK) {
+      sessionDuration = settings.longBreakMinutes;
+    }
+    
+    // Log the completed session
+    if (sessionDuration > 0) {
+        const newSession = {
+            date: new Date().toISOString().split('T')[0],
+            duration: sessionDuration,
+            type: sessionType.toLowerCase().replace('_', '-') // e.g. 'work', 'short-break'
+        };
+        setAllSessions(prev => [...prev, newSession]);
+    }
+  });
 
   useEffect(() => {
-      localStorage.setItem('pomofocusSettings', JSON.stringify(settings));
-      document.title = `${mode === MODE.WORK ? "Work" : mode === MODE.SHORT_BREAK ? "Short Break" : "Long Break"} - Pomofocus Clone`;
-  }, [settings, mode]); // Added mode to update document title
+    localStorage.setItem('pomofocusSettings', JSON.stringify(settings));
+    localStorage.setItem('pomofocusTasks', JSON.stringify(tasks)); // Save tasks
+    localStorage.setItem('pomofocusSessions', JSON.stringify(allSessions)); // Save sessions
+
+
+    const currentTask = tasks.find(task => task.id === activeTaskId && !task.completed);
+    const taskName = currentTask ? ` | ${currentTask.name}` : "";
+    let titlePrefix = "Pomofocus Clone";
+    if (mode === MODE.WORK) titlePrefix = "Work";
+    else if (mode === MODE.SHORT_BREAK) titlePrefix = "Short Break";
+    else if (mode === MODE.LONG_BREAK) titlePrefix = "Long Break";
+    
+    document.title = `${secondsLeft !== currentDuration ? '(' + Math.floor(secondsLeft / 60) + ':' + (secondsLeft % 60).toString().padStart(2, '0') + ') ' : ''}${titlePrefix}${taskName} - Pomofocus Clone`;
+
+  }, [settings, mode, tasks, activeTaskId, allSessions, secondsLeft, currentDuration]);
 
   const handleSaveSettings = (newSettings) => {
     setSettings(newSettings);
+    // Optionally, reset timer if durations change significantly while inactive
+    if (!isActive) {
+        resetTimer(); // Or switchMode(mode) to re-apply new settings
+    }
   };
 
   const getBackgroundColor = () => {
-      switch(mode) {
-          case MODE.WORK: return styles.bgWork;
-          case MODE.SHORT_BREAK: return styles.bgShortBreak;
-          case MODE.LONG_BREAK: return styles.bgLongBreak;
-          default: return styles.bgWork;
-      }
-  }
-
-  // // Placeholder functions for new buttons
-  // const handleReportClick = () => {
-  //   console.log("Report button clicked. Implement navigation or modal here.");
-  //   // Example: navigate('/report');
-  // };
+    switch (mode) {
+      case MODE.WORK: return styles.bgWork;
+      case MODE.SHORT_BREAK: return styles.bgShortBreak;
+      case MODE.LONG_BREAK: return styles.bgLongBreak;
+      default: return styles.bgWork;
+    }
+  };
 
   const handleSignUpClick = () => {
     navigate('/register');
   };
 
+  // --- Task Management Functions ---
+  const addTask = (name, estPomodoros) => {
+    const newTask = {
+      id: Date.now(),
+      name,
+      estPomodoros: parseInt(estPomodoros, 10) || 1,
+      completedPomodoros: 0,
+      completed: false,
+      notes: '',
+    };
+    setTasks(prevTasks => [newTask, ...prevTasks]); // Add to top
+  };
+
+  const updateTask = (updatedTask) => {
+    setTasks(prevTasks =>
+      prevTasks.map(task => (task.id === updatedTask.id ? updatedTask : task))
+    );
+  };
+
+  const deleteTask = (taskId) => {
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+    if (activeTaskId === taskId) {
+      setActiveTaskId(null); // Deselect if current task is deleted
+    }
+  };
+
+  const toggleTaskCompletion = (taskId) => {
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === taskId ? { ...task, completed: !task.completed, completedPomodoros: !task.completed ? task.estPomodoros : task.completedPomodoros } : task
+      )
+    );
+     if (activeTaskId === taskId) { // If completing the active task
+        const task = tasks.find(t => t.id === taskId);
+        if (task && !task.completed) { // Check if it's being marked as completed now
+            // Do nothing, user might un-complete it
+        } else {
+             setActiveTaskId(null); // Deselect if it's marked as complete
+        }
+    }
+  };
+
+  const selectTask = (taskId) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (task && !task.completed) {
+        setActiveTaskId(taskId);
+    } else if (task && task.completed) {
+        setActiveTaskId(null); // Don't select completed tasks as active for work
+    }
+  };
+  // --- End Task Management Functions ---
+
+  const activeTaskDetails = tasks.find(task => task.id === activeTaskId);
 
   return (
     <div className={`${styles.appContainer} ${getBackgroundColor()}`}>
       <header className={styles.header}>
-          <h1>Pomofocus Clone</h1>
-          <div className={styles.headerActions}>
-            <Button
-                onClick={() => setShowReport(true)}
-                variant="settingsToggle" // Base variant from Button.module.css
-                className={`${styles.headerButton} ${styles.appReportButton}`} // Added appReportButton
-            >
-                Report
-            </Button>
-            <Button
-                onClick={() => setShowSettings(true)}
-                variant="settingsToggle" // Base variant
-                className={`${styles.headerButton} ${styles.appSettingsButton}`} // Added appSettingsButton
-            >
-                Settings
-            </Button>
-            <Button
-                onClick={handleSignUpClick}
-                variant="settingsToggle"
-                className={`${styles.headerButton} ${styles.signUpButton}`}
-            >
-                Sign Up
-            </Button>
-          </div>
+        <h1>Pomofocus Clone</h1>
+        <div className={styles.headerActions}>
+          <Button onClick={() => setShowReport(true)} variant="settingsToggle" className={`${styles.headerButton} ${styles.appReportButton}`}>Report</Button>
+          <Button onClick={() => setShowSettings(true)} variant="settingsToggle" className={`${styles.headerButton} ${styles.appSettingsButton}`}>Settings</Button>
+          <Button onClick={handleSignUpClick} variant="settingsToggle" className={`${styles.headerButton} ${styles.signUpButton}`}>Sign Up</Button>
+        </div>
       </header>
 
-      {/* ... rest of your App.js JSX ... */}
       <main className={styles.mainContent}>
-         <div className={styles.modeSwitcher}>
-             <Button onClick={() => switchMode(MODE.WORK)} className={mode === MODE.WORK ? styles.activeMode : ''}>Pomodoro</Button>
-             <Button onClick={() => switchMode(MODE.SHORT_BREAK)} className={mode === MODE.SHORT_BREAK ? styles.activeMode : ''}>Short Break</Button>
-             <Button onClick={() => switchMode(MODE.LONG_BREAK)} className={mode === MODE.LONG_BREAK ? styles.activeMode : ''}>Long Break</Button>
-         </div>
-         
+        <div className={styles.modeSwitcher}>
+          <Button onClick={() => switchMode(MODE.WORK)} className={`${styles.modeButton} ${mode === MODE.WORK ? styles.activeMode : ''}`}>Pomodoro</Button>
+          <Button onClick={() => switchMode(MODE.SHORT_BREAK)} className={`${styles.modeButton} ${mode === MODE.SHORT_BREAK ? styles.activeMode : ''}`}>Short Break</Button>
+          <Button onClick={() => switchMode(MODE.LONG_BREAK)} className={`${styles.modeButton} ${mode === MODE.LONG_BREAK ? styles.activeMode : ''}`}>Long Break</Button>
+        </div>
+
         <TimerDisplay
           mode={mode}
           secondsLeft={secondsLeft}
@@ -139,10 +220,34 @@ function PomodoroTime() {
           onStart={startTimer}
           onPause={pauseTimer}
           onReset={resetTimer}
+          // Disable start if it's WORK mode and no task is selected, or if a task is selected but it's already completed
+          isStartDisabled={mode === MODE.WORK && (!activeTaskId || (activeTaskDetails && activeTaskDetails.completed))}
         />
-        <div className={styles.cycleInfo}>
-          Completed Pomodoros in cycle: {pomodoroCount} / {settings.longBreakInterval}
+
+        {/* --- NEW Task and Cycle Info Area --- */}
+        <div className={styles.taskAndCycleInfo}>
+            <div className={styles.currentTaskDisplay}>
+                {mode === MODE.WORK && activeTaskDetails && !activeTaskDetails.completed
+                    ? `Working on: ${activeTaskDetails.name}`
+                    : mode === MODE.WORK && !activeTaskDetails
+                    ? "Select a task to start working"
+                    : "Time for a break!" }
+            </div>
+            <div className={styles.cycleInfo}>
+                Pomos in cycle: {pomodoroCount} / {settings.longBreakInterval}
+            </div>
         </div>
+
+        <TaskManager
+          tasks={tasks}
+          onAddTask={addTask}
+          onUpdateTask={updateTask}
+          onDeleteTask={deleteTask}
+          onToggleTaskCompletion={toggleTaskCompletion}
+          onSelectTask={selectTask}
+          activeTaskId={activeTaskId}
+        />
+        {/* --- END Task Manager --- */}
       </main>
 
       {showSettings && (
@@ -155,13 +260,14 @@ function PomodoroTime() {
 
       {showReport && (
         <Report
-          initialSessions={allSessions} // Pass the collected session data
-          initialTasks={allTasks}       // Pass the task data
+          initialSessions={allSessions}
+          initialTasks={tasks} // Pass current tasks to report
           onClose={() => setShowReport(false)}
         />
       )}
 
       <footer className={styles.footer}>
+        {/* Footer content if any */}
       </footer>
     </div>
   );

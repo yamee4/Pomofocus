@@ -6,7 +6,7 @@ import {
 import { Clock, CheckCircle, List } from 'lucide-react';
 import { formatDate, formatDuration } from '../utils/formatTime';
 
-const Report = ({ initialSessions = [], initialTasks = [] }) => {
+const Report = ({ initialSessions = [], initialTasks = [] , onClose}) => {
   const [dateRange, setDateRange] = useState('last7days');
 
   const processedSessions = useMemo(() => {
@@ -58,9 +58,15 @@ const Report = ({ initialSessions = [], initialTasks = [] }) => {
   );
 
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Report</h1>
+    <div className={styles.reportOverlay}>
+      <div className={styles.reportModal}>
+        <div className={styles.reportHeader}>
+          <h1>Report</h1>
+          <button onClick={onClose} className={styles.closeButton} aria-label="Close Report">
+            &times;
+          </button>
+        </div>
+
         <div className={styles.rangeSelector}>
           <select
             value={dateRange}
@@ -71,85 +77,80 @@ const Report = ({ initialSessions = [], initialTasks = [] }) => {
             <option value="last30days">Last 30 Days</option>
           </select>
         </div>
-      </header>
 
-      <section className={styles.cardGrid}>
-        <SummaryCard
-          title="Total Focus Time"
-          value={formatDuration(totalFocusTime)}
-          icon={<Clock size={24} className="text-red-500" />}
-          color="#ef4444"
-        />
-        <SummaryCard
-          title="Total Sessions"
-          value={totalSessionsCount}
-          icon={<CheckCircle size={24} className="text-blue-500" />}
-          color="#3b82f6"
-        />
-        <SummaryCard
-          title="Avg. Session"
-          value={formatDuration(avgSessionDuration)}
-          icon={<List size={24} className="text-green-500" />}
-          color="#10b981"
-        />
-      </section>
+        <div className={styles.cardGrid}>
+          <SummaryCard
+            title="Total Focus Time"
+            value={formatDuration(totalFocusTime)}
+            icon={<Clock size={24} className="text-red-500" />}
+            color="#ef4444"
+          />
+          <SummaryCard
+            title="Total Sessions"
+            value={totalSessionsCount}
+            icon={<CheckCircle size={24} className="text-blue-500" />}
+            color="#3b82f6"
+          />
+          <SummaryCard
+            title="Avg. Session"
+            value={formatDuration(avgSessionDuration)}
+            icon={<List size={24} className="text-green-500" />}
+            color="#10b981"
+          />
+        </div>
 
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Focus Hours</h2>
-        <p className={styles.sectionSubtitle}>Track your daily focus trends.</p>
-        {processedSessions.length > 0 ? (
-          <div style={{ width: '100%', height: 350 }}>
-            <ResponsiveContainer>
-              <BarChart data={processedSessions} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis dataKey="name" />
-                <YAxis tickFormatter={formatDuration} />
-                <Tooltip formatter={(value) => [formatDuration(value), "Focus Time"]} />
-                <Legend />
-                <Bar dataKey="focusTime" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-10">No session data available.</p>
-        )}
-      </section>
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>Focus Hours</h2>
+          <p className={styles.sectionSubtitle}>Track your daily focus trends.</p>
+          {processedSessions.length > 0 ? (
+            <div style={{ width: '100%', height: 350 }}>
+              <ResponsiveContainer>
+                <BarChart data={processedSessions} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                  <XAxis dataKey="name" />
+                  <YAxis tickFormatter={formatDuration} />
+                  <Tooltip formatter={(value) => [formatDuration(value), "Focus Time"]} />
+                  <Legend />
+                  <Bar dataKey="focusTime" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-10">No session data available.</p>
+          )}
+        </div>
 
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Activity Summary</h2>
-        <p className={styles.sectionSubtitle}>A log of your completed tasks during this period.</p>
-        {filteredTasks.length > 0 ? (
-          <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-            {filteredTasks.map((task) => (
-              <div key={task.id} className={styles.taskItem}>
-                <div className={styles.taskHeader}>
-                  <div>
-                    <h3 className="font-medium text-gray-800">{task.name}</h3>
-                    <p className="text-xs text-gray-500">
-                      {task.project && `${task.project} • `}
-                      {formatDate(task.date)} • {task.pomodoros} pomodoro{task.pomodoros > 1 ? 's' : ''}
-                    </p>
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>Activity Summary</h2>
+          <p className={styles.sectionSubtitle}>A log of your completed tasks during this period.</p>
+          {filteredTasks.length > 0 ? (
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+              {filteredTasks.map((task) => (
+                <div key={task.id} className={styles.taskItem}>
+                  <div className={styles.taskHeader}>
+                    <div>
+                      <h3 className="font-medium text-gray-800">{task.name}</h3>
+                      <p className="text-xs text-gray-500">
+                        {task.project && `${task.project} • `}
+                        {formatDate(task.date)} • {task.pomodoros} pomodoro{task.pomodoros > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <span className={`${styles.statusBadge} ${task.status === 'completed' ? styles.completed : styles.pending}`}>
+                      {task.status || 'pending'}
+                    </span>
                   </div>
-                  <span className={`${styles.statusBadge} ${task.status === 'completed' ? styles.completed : styles.pending}`}>
-                    {task.status || 'pending'}
-                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-10">No tasks found for this period.</p>
-        )}
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-10">No tasks found for this period.</p>
+          )}
+        </div>
 
-        {/* <button onClick={onClose} className={styles.closeButton}>
-            Close Report
-        </button> */}
-
-      </section>
-
-      <footer className={styles.footer}>
-        <p>Pomofocus Clone Report UI</p>
-      </footer>
+        <div className={styles.footer}>
+          <p>Pomofocus Clone Report UI</p>
+        </div>
+      </div>
     </div>
   );
 };
