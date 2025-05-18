@@ -99,9 +99,9 @@ const TaskItem = ({ task, onUpdateTask, onDeleteTask, onToggleTaskCompletion, on
         <span className={styles.taskName}>{task.name}</span>
         {!isCompletedList && (
             <div className={styles.taskPomodoros}>
-            <span className={styles.completedPomosCount}>{task.completedPomodoros}</span>
-            <span className={styles.pomodoroSeparator}>/</span>
-            <span className={styles.estPomosCount}>{task.estPomodoros}</span>
+              <span className={styles.completedPomosCount}>{task.completedPomodoros}</span>
+              <span className={styles.pomodoroSeparator}>/</span>
+              <span className={styles.estPomosCount}>{task.estPomodoros}</span>
             </div>
         )}
         <div className={styles.taskActions}>

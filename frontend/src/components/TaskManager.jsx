@@ -10,10 +10,22 @@ const TaskManager = ({  tasks, onAddTask, onUpdateTask, onDeleteTask, onToggleTa
   const unfinishedTasks = tasks.filter(task => !task.completed);
   const finishedTasks = tasks.filter(task => task.completed);
 
+
+  const totalEstTime = unfinishedTasks.reduce((sum, task) => {
+    const taskEst = Number(task.estPomodoros);
+    return sum + (isNaN(taskEst) ? 0 : taskEst);
+  }, 0);
+
   return (
     <div className={styles.taskManagerContainer}>
       <div className={styles.tasksHeader}>
         <span className={styles.tasksTitle}>Tasks</span>
+        {/* Display total estimated time if there are unfinished tasks */}
+        {unfinishedTasks.length > 0 && (
+          <span className={styles.totalEstTime}>
+            (Est. to Finish: {totalEstTime} hours)
+          </span>
+        )}
         {/* Placeholder for future options like filtering or sorting if needed */}
       </div>
 

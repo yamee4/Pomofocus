@@ -19,7 +19,7 @@ const AddTaskItem = ({ onAddTask, onCancel }) => {
             alert('Task name cannot be empty');
             return;
         }
-        onAddTask({ name: taskName.trim(), estPomodoros: parseInt(estPomodoros, 10) || 1 });
+        onAddTask(taskName.trim(), parseInt(estPomodoros, 10) || 1);
         setTaskName('');
         setEstPomodoros(1);
     }

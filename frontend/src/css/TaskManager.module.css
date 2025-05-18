@@ -1,7 +1,7 @@
 /* src/css/components_css/TaskManager.module.css */
 .taskManagerContainer {
   width: 100%;
-  max-width: 520px; /* Adjusted for a bit more space */
+  max-width: 500px; /* Adjusted for a bit more space */
   margin: 25px auto;
   padding: 20px;
   background-color: rgba(255, 255, 255, 0.08); /* Slightly more subtle */

@@ -32,20 +32,16 @@ function PomodoroTime() {
   // Initialize tasks state - this will be managed within PomodoroTime
   const [tasks, setTasks] = useState(() => {
     const savedTasks = localStorage.getItem('pomofocusTasks');
-    return savedTasks ? JSON.parse(savedTasks) : [
-      { id: Date.now() + 100, name: 'Example Task 1: Study React', estPomodoros: 3, completedPomodoros: 0, completed: false, notes: 'Focus on hooks and state.' },
-      { id: Date.now() + 200, name: 'Example Task 2: Project Planning', estPomodoros: 2, completedPomodoros: 0, completed: false, notes: '' },
-    ];
+    // If savedTasks exist, parse them, otherwise initialize with an empty array
+    return savedTasks ? JSON.parse(savedTasks) : [];
   });
   const [activeTaskId, setActiveTaskId] = useState(null);
 
   // Example session data for Report
   const [allSessions, setAllSessions] = useState(() => {
     const savedSessions = localStorage.getItem('pomofocusSessions');
-    return savedSessions ? JSON.parse(savedSessions) : [
-      { date: '2024-05-10', duration: 25, type: 'work' },
-      { date: '2024-05-11', duration: 5, type: 'short_break' },
-    ];
+    // If savedSessions exist, parse them, otherwise initialize with an empty array
+    return savedSessions ? JSON.parse(savedSessions) : [];
   });
 
 
@@ -56,12 +52,12 @@ function PomodoroTime() {
     longBreakInterval: settings.longBreakInterval,
   }), [settings]);
 
-  // MODIFIED useTimer: Added onTimerComplete callback
+
   const {
     mode,
     isActive,
     secondsLeft,
-    pomodoroCount, // Pomodoros in current cycle for long break
+    pomodoroCount, 
     startTimer,
     pauseTimer,
     resetTimer,
@@ -119,9 +115,9 @@ function PomodoroTime() {
 
   const handleSaveSettings = (newSettings) => {
     setSettings(newSettings);
-    // Optionally, reset timer if durations change significantly while inactive
+
     if (!isActive) {
-        resetTimer(); // Or switchMode(mode) to re-apply new settings
+        resetTimer(); 
     }
   };
 
@@ -188,7 +184,7 @@ function PomodoroTime() {
         setActiveTaskId(null); // Don't select completed tasks as active for work
     }
   };
-  // --- End Task Management Functions ---
+
 
   const activeTaskDetails = tasks.find(task => task.id === activeTaskId);
 
@@ -224,7 +220,7 @@ function PomodoroTime() {
           isStartDisabled={mode === MODE.WORK && (!activeTaskId || (activeTaskDetails && activeTaskDetails.completed))}
         />
 
-        {/* --- NEW Task and Cycle Info Area --- */}
+        {/* --- Task Manager --- */}
         <div className={styles.taskAndCycleInfo}>
             <div className={styles.currentTaskDisplay}>
                 {mode === MODE.WORK && activeTaskDetails && !activeTaskDetails.completed
@@ -238,7 +234,11 @@ function PomodoroTime() {
             </div>
         </div>
 
-        <TaskManager
+       
+        {/* --- END Task Manager --- */}
+      </main>
+
+       <TaskManager
           tasks={tasks}
           onAddTask={addTask}
           onUpdateTask={updateTask}
@@ -247,8 +247,6 @@ function PomodoroTime() {
           onSelectTask={selectTask}
           activeTaskId={activeTaskId}
         />
-        {/* --- END Task Manager --- */}
-      </main>
 
       {showSettings && (
         <Settings
