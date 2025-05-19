@@ -7,6 +7,7 @@ import Report from '../components/Report';
 import TaskManager from '../components/TaskManager'; 
 import { useTimer, MODE } from '../hooks/useTimer';
 import styles from '../css/pages_css/pomodoro.module.css';
+import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const DEFAULT_SETTINGS = {
@@ -18,7 +19,9 @@ const DEFAULT_SETTINGS = {
 
 function PomodoroTime() {
   const navigate = useNavigate();
-  // const location = useLocation(); // Not used in current snippet, keep if needed elsewhere
+  const location = useLocation(); // Not used in current snippet, keep if needed elsewhere
+
+  const apiURL = import.meta.env.VITE_API_URL;
 
   const loadSettings = () => {
     const saved = localStorage.getItem('pomofocusSettings');
@@ -113,6 +116,14 @@ function PomodoroTime() {
 
   }, [settings, mode, tasks, activeTaskId, allSessions, secondsLeft, currentDuration]);
 
+  useEffect(() => {
+    console.log(location.state);
+    if (location.state) {
+      const { name, email } = location.state.user;
+      console.log(`User logged in: ${name}, ${email}`);
+    }
+  }, [location.state]);
+
   const handleSaveSettings = (newSettings) => {
     setSettings(newSettings);
 
@@ -185,6 +196,26 @@ function PomodoroTime() {
     }
   };
 
+  const handleLogout = async () => {
+  try {
+    await axios.post(`${apiURL}/api/user/logout`, {}, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true,
+    });
+
+    // Clear any localStorage or context if needed
+    localStorage.removeItem('pomofocusTasks');
+    localStorage.removeItem('pomofocusSessions');
+
+    navigate('/', { replace: true });
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+};
+
+
 
   const activeTaskDetails = tasks.find(task => task.id === activeTaskId);
 
@@ -195,7 +226,11 @@ function PomodoroTime() {
         <div className={styles.headerActions}>
           <Button onClick={() => setShowReport(true)} variant="settingsToggle" className={`${styles.headerButton} ${styles.appReportButton}`}>Report</Button>
           <Button onClick={() => setShowSettings(true)} variant="settingsToggle" className={`${styles.headerButton} ${styles.appSettingsButton}`}>Settings</Button>
-          <Button onClick={handleSignUpClick} variant="settingsToggle" className={`${styles.headerButton} ${styles.signUpButton}`}>Sign Up</Button>
+          {location.state ? (
+            <Button onClick={handleLogout} variant="settingsToggle" className={`${styles.headerButton} ${styles.appLogoutButton}`}>Logout</Button>
+          ) : (
+            <Button onClick={handleSignUpClick} variant="settingsToggle" className={`${styles.headerButton} ${styles.signUpButton}`}>Sign Up</Button>
+          )}
         </div>
       </header>
 

@@ -21,21 +21,27 @@ const Register = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.post(`${apiURL}/api/user/register`, {
-            name: formData.name,
-            email: formData.email,
-            password: formData.password,
-        })
-        .then(response => {
-            // handle success, e.g., redirect or show message
-            console.log("Registration successful:", response.data);
-            navigate("/");
-        })
-        .catch(error => {
-            // handle error, e.g., show error message
-            console.error("Registration error:", error.response ? error.response.data : error.message);
-        });
-        console.log("Form submitted:", formData);
+        try {
+            const res = axios.post(`${apiURL}/api/user/register`, formData, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                withCredentials: true,
+            });
+            const data = res.data;
+            if (data.error) {
+                // handle error, e.g., show message
+                console.error("Registration error:", data);
+            } else {
+                console.log("Registration successful:", data);
+                navigate("/", {state: res.data});
+            }
+        }
+        catch (error) {
+            // handle network or server error
+            // Example: setError("An error occurred. Please try again.");
+            console.error("An error occurred:", error);
+        }
     };
 
     return (

@@ -30,6 +30,16 @@ def login_user(email, password):
         print(f"Error during login: {e}")
         return None
 
+def get_user_by_id(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            print("User not found.")
+            return None
+        return user
+    except Exception as e:
+        print(f"Error fetching user: {e}")
+        return None
 
 
 

@@ -26,6 +26,7 @@ const Login = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                withCredentials: true,
             });
             const data = res.data;
             if (data.error === "Invalid credentials") {
@@ -33,7 +34,7 @@ const Login = () => {
                 console.error("Login error:", data);
             } else {
                 console.log("Login successful:", data);
-                navigate(location.state?.from || "/");
+                navigate("/", {state: res.data});
             }
         } catch (error) {
             // handle network or server error
