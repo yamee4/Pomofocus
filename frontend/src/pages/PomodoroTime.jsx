@@ -1,14 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, use } from 'react';
+
 import TimerDisplay from '../components/TimerDisplay';
 import TimerControls from '../components/TimerControl';
 import Settings from '../components/Settings';
 import Button from '../components/Button';
 import Report from '../components/Report';
 import TaskManager from '../components/TaskManager'; 
+import LoginRequiredModal from '../components/LoginRequiredModal';
 import { useTimer, MODE } from '../hooks/useTimer';
 import styles from '../css/pages_css/pomodoro.module.css';
+
 import axios from 'axios';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaUserCircle, FaSignOutAlt } from "react-icons/fa";
 
 const DEFAULT_SETTINGS = {
   workMinutes: 25,
@@ -19,9 +23,31 @@ const DEFAULT_SETTINGS = {
 
 function PomodoroTime() {
   const navigate = useNavigate();
-  const location = useLocation(); // Not used in current snippet, keep if needed elsewhere
+  const [userLogin, setUserLogin] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
 
   const apiURL = import.meta.env.VITE_API_URL;
+
+  //userLogin state
+  const checkAuth = async () => {
+    try {
+      const response = await axios.get(`${apiURL}/api/user/profile`, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.status === 200) {
+        setUserLogin(true);
+      } else {
+        setUserLogin(false);
+      }
+    } catch (error) {
+      console.error('Error checking authentication:', error);
+      setUserLogin(false);
+    }
+  };
 
   const loadSettings = () => {
     const saved = localStorage.getItem('pomofocusSettings');
@@ -100,6 +126,11 @@ function PomodoroTime() {
   });
 
   useEffect(() => {
+    // Check if the user is logged in
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem('pomofocusSettings', JSON.stringify(settings));
     localStorage.setItem('pomofocusTasks', JSON.stringify(tasks)); // Save tasks
     localStorage.setItem('pomofocusSessions', JSON.stringify(allSessions)); // Save sessions
@@ -115,14 +146,6 @@ function PomodoroTime() {
     document.title = `${secondsLeft !== currentDuration ? '(' + Math.floor(secondsLeft / 60) + ':' + (secondsLeft % 60).toString().padStart(2, '0') + ') ' : ''}${titlePrefix}${taskName} - Pomofocus Clone`;
 
   }, [settings, mode, tasks, activeTaskId, allSessions, secondsLeft, currentDuration]);
-
-  useEffect(() => {
-    console.log(location.state);
-    if (location.state) {
-      const { name, email } = location.state.user;
-      console.log(`User logged in: ${name}, ${email}`);
-    }
-  }, [location.state]);
 
   const handleSaveSettings = (newSettings) => {
     setSettings(newSettings);
@@ -145,17 +168,41 @@ function PomodoroTime() {
     navigate('/register');
   };
 
+
+
   // --- Task Management Functions ---
-  const addTask = (name, estPomodoros) => {
-    const newTask = {
-      id: Date.now(),
-      name,
-      estPomodoros: parseInt(estPomodoros, 10) || 1,
-      completedPomodoros: 0,
-      completed: false,
-      notes: '',
-    };
-    setTasks(prevTasks => [newTask, ...prevTasks]); // Add to top
+  const addTask = async (name, estPomodoros) => {
+    // const newTask = {
+    //   id: Date.now(),
+    //   name,
+    //   estPomodoros: parseInt(estPomodoros, 10) || 1,
+    //   completedPomodoros: 0,
+    //   completed: false,
+    //   notes: '',
+    // };
+    // setTasks(prevTasks => [newTask, ...prevTasks]); // Add to top
+
+    try {
+      const response = await axios.post(`${apiURL}/api/tasks`, {
+        name,
+        estPomodoros: parseInt(estPomodoros, 10) || 1,
+        completedPomodoros: 0,
+        completed: false,
+        notes: '',
+      }, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      });
+
+      const newTask = response.data;
+      setTasks(prevTasks => [newTask, ...prevTasks]); // Add to top
+    }
+    catch (error) {
+      console.error("Error adding task:", error);
+    }
+
   };
 
   const updateTask = (updatedTask) => {
@@ -196,6 +243,16 @@ function PomodoroTime() {
     }
   };
 
+  const handleReportClick = () => {
+    if(!userLogin) {
+      setShowLoginModal(true);
+    }
+    else {
+      setShowReport(true);
+    }
+  };
+
+
   const handleLogout = async () => {
   try {
     await axios.post(`${apiURL}/api/user/logout`, {}, {
@@ -209,7 +266,7 @@ function PomodoroTime() {
     localStorage.removeItem('pomofocusTasks');
     localStorage.removeItem('pomofocusSessions');
 
-    navigate('/', { replace: true });
+    window.location.href = '/';
   } catch (error) {
     console.error("Logout error:", error);
   }
@@ -224,12 +281,49 @@ function PomodoroTime() {
       <header className={styles.header}>
         <h1>Pomofocus Clone</h1>
         <div className={styles.headerActions}>
-          <Button onClick={() => setShowReport(true)} variant="settingsToggle" className={`${styles.headerButton} ${styles.appReportButton}`}>Report</Button>
-          <Button onClick={() => setShowSettings(true)} variant="settingsToggle" className={`${styles.headerButton} ${styles.appSettingsButton}`}>Settings</Button>
-          {location.state ? (
-            <Button onClick={handleLogout} variant="settingsToggle" className={`${styles.headerButton} ${styles.appLogoutButton}`}>Logout</Button>
+          <Button
+            onClick={handleReportClick}
+            variant="settingsToggle"
+            className={`${styles.headerButton} ${styles.appReportButton}`}
+          >
+            Report
+          </Button>
+          <Button
+            onClick={() => setShowSettings(true)}
+            variant="settingsToggle"
+            className={`${styles.headerButton} ${styles.appSettingsButton}`}
+          >
+            Settings
+          </Button>
+
+          {userLogin ? ( 
+            <>
+              <div className={styles.profileDropdown}>
+                <button className={styles.profileButton}>
+                  <FaUserCircle className={styles.icon} />
+                  Profile
+                  <span className={styles.caret}>▼</span>
+                </button>
+                <div className={styles.dropdownMenu}>
+                  <Link to="/profile" className={styles.dropdownItem}>
+                    <FaUserCircle className={styles.icon} />
+                    View Profile
+                  </Link>
+                  <button onClick={handleLogout} className={styles.dropdownItem}>
+                    <FaSignOutAlt className={styles.icon} />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </>
           ) : (
-            <Button onClick={handleSignUpClick} variant="settingsToggle" className={`${styles.headerButton} ${styles.signUpButton}`}>Sign Up</Button>
+            <Button
+              onClick={handleSignUpClick}
+              variant="settingsToggle"
+              className={`${styles.headerButton} ${styles.signUpButton}`}
+            >
+              Sign Up
+            </Button>
           )}
         </div>
       </header>
@@ -274,6 +368,7 @@ function PomodoroTime() {
       </main>
 
        <TaskManager
+          isLogin={userLogin}
           tasks={tasks}
           onAddTask={addTask}
           onUpdateTask={updateTask}
@@ -282,6 +377,14 @@ function PomodoroTime() {
           onSelectTask={selectTask}
           activeTaskId={activeTaskId}
         />
+
+      {showLoginModal && (
+        <LoginRequiredModal
+          onClose={() => setShowLoginModal(false)}
+        />
+      )}
+
+      {/* Settings Modal */}
 
       {showSettings && (
         <Settings

@@ -2,19 +2,29 @@ import React, {useState} from "react";
 import TaskList from './TaskList';
 import AddTaskItem from './AddTaskItem';
 import Button from './Button';
+import LoginRequiredModal from './LoginRequiredModal';
 import styles from '../css/TaskManager.module.css';
 
-const TaskManager = ({  tasks, onAddTask, onUpdateTask, onDeleteTask, onToggleTaskCompletion, onSelectTask, activeTaskId }) => {
+const TaskManager = ({  isLogin, tasks, onAddTask, onUpdateTask, onDeleteTask, onToggleTaskCompletion, onSelectTask, activeTaskId }) => {
     const [showAddTaskForm, setShowAddTaskForm] = useState(false);
 
   const unfinishedTasks = tasks.filter(task => !task.completed);
   const finishedTasks = tasks.filter(task => task.completed);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
 
   const totalEstTime = unfinishedTasks.reduce((sum, task) => {
     const taskEst = Number(task.estPomodoros);
     return sum + (isNaN(taskEst) ? 0 : taskEst);
   }, 0);
+
+  const handleAddTask = () => {
+    if (isLogin) {
+      setShowAddTaskForm(true)
+    } else {
+      setShowLoginModal(true);
+    }
+  }
 
   return (
     <div className={styles.taskManagerContainer}>
@@ -51,12 +61,21 @@ const TaskManager = ({  tasks, onAddTask, onUpdateTask, onDeleteTask, onToggleTa
         />
       ) : (
         <Button
-          onClick={() => setShowAddTaskForm(true)}
+          onClick={handleAddTask}
           className={styles.addTaskButton}
         >
           + Add Task
         </Button>
       )}
+
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <LoginRequiredModal
+          onClose={() => setShowLoginModal(false)}
+        />
+      )}
+
+      {/* Optional Section: Show Finished Tasks */}
 
       {/* Finished Tasks (Optional Section) */}
       {finishedTasks.length > 0 && (

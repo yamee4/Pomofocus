@@ -7,7 +7,6 @@ import axios from "axios";
 const Login = () => {
     const apiURL = import.meta.env.VITE_API_URL;
     const navigate = useNavigate();
-    const location = useLocation();
 
     const [formData, setFormData] = useState({
         email: "",
@@ -34,7 +33,7 @@ const Login = () => {
                 console.error("Login error:", data);
             } else {
                 console.log("Login successful:", data);
-                navigate("/", {state: res.data});
+                navigate("/");
             }
         } catch (error) {
             // handle network or server error

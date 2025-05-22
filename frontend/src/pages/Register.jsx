@@ -34,7 +34,7 @@ const Register = () => {
                 console.error("Registration error:", data);
             } else {
                 console.log("Registration successful:", data);
-                navigate("/", {state: res.data});
+                navigate("/");
             }
         }
         catch (error) {

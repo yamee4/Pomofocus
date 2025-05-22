@@ -95,6 +95,77 @@
   color: white; /* Ensure text is fully white on hover */
 }
 
+.profileDropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.profileButton {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: none;
+  color: rgba(255, 255, 255, 0.85);
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.profileButton:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.caret {
+  margin-left: 4px;
+  font-size: 0.6rem;
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 8px 0;
+  min-width: 140px;
+  display: none;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.profileDropdown:hover .dropdownMenu {
+  display: flex;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  gap: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.dropdownItem:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.icon {
+  font-size: 1rem;
+}
 
 .mainContent {
   background-color: rgba(255, 255, 255, 0.1);
