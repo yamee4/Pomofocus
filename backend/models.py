@@ -23,6 +23,20 @@ class Task(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship('User', backref=db.backref('tasks', lazy=True))
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'estimated_pomodoro': self.estimated_pomodoro,
+            'completed_pomodoro': self.completed_pomodoro,
+            'is_completed': self.is_completed,
+            'due_date': self.due_date.isoformat() if self.due_date else None,
+            'priority': self.priority,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat(),
+        }
+
 class PomodoroSession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

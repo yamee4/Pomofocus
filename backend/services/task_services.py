@@ -5,6 +5,7 @@ def create_task(user_id, title, description, estimated_pomodoro, due_date, prior
     """
     Create a new task for the user.
     """
+
     new_task = Task(
         title=title,
         description=description,
@@ -24,18 +25,21 @@ def get_all_tasks(user_id):
     tasks = Task.query.filter_by(user_id=user_id).all()
     return tasks
 
-def get_task_by_id(task_id):
+def mark_task_by_id(task_id):
     """
-    Get a task by its ID.
+    Mark a task as completed by its ID.
     """
     task = Task.query.get(task_id)
-    return task
+    if task:
+        task.is_completed = True
+        db.session.commit()
+    return None
 
-def update_task(task_id, title=None, description=None, estimated_pomodoro=None, due_date=None, priority=None):
+def update_task(task_id, user_id, title=None, description=None, estimated_pomodoro=None, due_date=None, priority=None):
     """
     Update a task's details.
     """
-    task = Task.query.get(task_id)
+    task = Task.query.filter_by(id=task_id, user_id=user_id).first()
     if not task:
         return None
 

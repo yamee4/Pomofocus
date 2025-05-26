@@ -2,7 +2,16 @@ import React from "react";
 import TaskItem from "./TaskItem";
 import styles from "../css/TaskList.module.css";
 
-const TaskList = ({ tasks, onUpdateTask, onDeleteTask, onToggleTaskCompletion, onSelectTask, activeTaskId, listTitle, isCompletedList = false }) => {
+const TaskList = ({ userLogin ,tasks, onUpdateTask, onDeleteTask, onToggleTaskCompletion, onSelectTask, activeTaskId, listTitle, isCompletedList = false}) => {
+
+  const fetchTasks = () => {
+    if (!tasks || tasks.length === 0) {
+      return [];
+    }
+    return tasks.filter(task => isCompletedList ? task.is_completed : !task.is_completed);
+  }
+
+
   if(!tasks || tasks.length === 0) {
     return listTitle === "To Do" && !isCompletedList ? (
       <p className={styles.noTasksMessage}>No tasks here. Add one to get started!</p>

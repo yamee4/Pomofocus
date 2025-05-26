@@ -59,11 +59,8 @@ function PomodoroTime() {
   const [showReport, setShowReport] = useState(false);
 
   // Initialize tasks state - this will be managed within PomodoroTime
-  const [tasks, setTasks] = useState(() => {
-    const savedTasks = localStorage.getItem('pomofocusTasks');
-    // If savedTasks exist, parse them, otherwise initialize with an empty array
-    return savedTasks ? JSON.parse(savedTasks) : [];
-  });
+  const [tasks, setTasks] = useState([]);
+
   const [activeTaskId, setActiveTaskId] = useState(null);
 
   // Example session data for Report
@@ -130,12 +127,31 @@ function PomodoroTime() {
     checkAuth();
   }, []);
 
+
+  useEffect(() => {
+    if (userLogin) {
+      axios.get(`${apiURL}/api/task/get_tasks`, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then(response => {
+        console.log('Fetched tasks:', response.data);
+        setTasks(response.data);
+      }).catch(error => {
+        console.error('Error fetching tasks:', error);
+      });
+    }
+  }, [userLogin]);
+
+  
+
   useEffect(() => {
     localStorage.setItem('pomofocusSettings', JSON.stringify(settings));
     localStorage.setItem('pomofocusTasks', JSON.stringify(tasks)); // Save tasks
     localStorage.setItem('pomofocusSessions', JSON.stringify(allSessions)); // Save sessions
 
-
+    
     const currentTask = tasks.find(task => task.id === activeTaskId && !task.completed);
     const taskName = currentTask ? ` | ${currentTask.name}` : "";
     let titlePrefix = "Pomofocus Clone";
@@ -172,65 +188,68 @@ function PomodoroTime() {
 
   // --- Task Management Functions ---
   const addTask = async (name, estPomodoros) => {
-    // const newTask = {
-    //   id: Date.now(),
-    //   name,
-    //   estPomodoros: parseInt(estPomodoros, 10) || 1,
-    //   completedPomodoros: 0,
-    //   completed: false,
-    //   notes: '',
-    // };
-    // setTasks(prevTasks => [newTask, ...prevTasks]); // Add to top
-
-    try {
-      const response = await axios.post(`${apiURL}/api/tasks`, {
+    if(!userLogin) {
+      const newTask = {
+        id: Date.now(),
         name,
         estPomodoros: parseInt(estPomodoros, 10) || 1,
         completedPomodoros: 0,
         completed: false,
         notes: '',
-      }, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+      };
+      setTasks(prevTasks => [newTask, ...prevTasks]); // Add to top
+    }
+  };
+
+  const updateTask = async (updatedTask) => {
+    try {
+      await axios.put(`${apiURL}/api/task/update_task/${updatedTask.id}`, updatedTask, {
+        withCredentials: true,
+      });
+      setTasks(prevTasks =>
+        prevTasks.map(task => (task.id === updatedTask.id ? updatedTask : task))
+      );
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
+  };
+
+  const deleteTask = async (taskId) => {
+   try {
+      await axios.delete(`${apiURL}/api/task/delete_task/${taskId}`, {
+        withCredentials: true,
+      });
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+      if (activeTaskId === taskId) {
+        setActiveTaskId(null);
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  };
+
+  const toggleTaskCompletion = async(taskId) => {
+    try {
+      await axios.put(`${apiURL}/api/task/toggle_completion/${taskId}`, {}, {
         withCredentials: true,
       });
 
-      const newTask = response.data;
-      setTasks(prevTasks => [newTask, ...prevTasks]); // Add to top
-    }
-    catch (error) {
-      console.error("Error adding task:", error);
-    }
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === taskId
+            ? { ...task, completed: !task.completed }
+            : task
+        )
+      );
 
-  };
-
-  const updateTask = (updatedTask) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task => (task.id === updatedTask.id ? updatedTask : task))
-    );
-  };
-
-  const deleteTask = (taskId) => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-    if (activeTaskId === taskId) {
-      setActiveTaskId(null); // Deselect if current task is deleted
-    }
-  };
-
-  const toggleTaskCompletion = (taskId) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === taskId ? { ...task, completed: !task.completed, completedPomodoros: !task.completed ? task.estPomodoros : task.completedPomodoros } : task
-      )
-    );
-     if (activeTaskId === taskId) { // If completing the active task
+      if (activeTaskId === taskId) {
         const task = tasks.find(t => t.id === taskId);
-        if (task && !task.completed) { // Check if it's being marked as completed now
-            // Do nothing, user might un-complete it
-        } else {
-             setActiveTaskId(null); // Deselect if it's marked as complete
+        if (task && task.completed) {
+          setActiveTaskId(null);
         }
+      }
+    } catch (error) {
+      console.error('Error toggling task completion:', error);
     }
   };
 

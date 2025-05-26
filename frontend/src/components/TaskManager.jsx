@@ -8,8 +8,8 @@ import styles from '../css/TaskManager.module.css';
 const TaskManager = ({  isLogin, tasks, onAddTask, onUpdateTask, onDeleteTask, onToggleTaskCompletion, onSelectTask, activeTaskId }) => {
     const [showAddTaskForm, setShowAddTaskForm] = useState(false);
 
-  const unfinishedTasks = tasks.filter(task => !task.completed);
-  const finishedTasks = tasks.filter(task => task.completed);
+  const unfinishedTasks = tasks.filter(task => !task.is_completed);
+  const finishedTasks = tasks.filter(task => task.is_completed);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
 
@@ -41,6 +41,7 @@ const TaskManager = ({  isLogin, tasks, onAddTask, onUpdateTask, onDeleteTask, o
 
       {/* Unfinished Tasks */}
       <TaskList
+        userLogin={isLogin}
         tasks={unfinishedTasks}
         onUpdateTask={onUpdateTask}
         onDeleteTask={onDeleteTask}
