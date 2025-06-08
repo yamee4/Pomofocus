@@ -11,18 +11,24 @@ from services.sync_services import (
 
 sync_bp = Blueprint('sync', __name__)
             
-@sync_bp.route('/api/sync', methods=['POST'])
-def sync():
-    auth_header = request.headers.get("Authorization", "")
-    token = auth_header.replace("Bearer ", "")
-
+@sync_bp.route('/settings', methods=['POST'])
+def sync_settings():
+    """
+    Endpoint to sync user settings.
+    Expects a valid JWT token in the Authorization header.
+    """
+    token = request.cookies.get('token')
+    if not token:
+        return jsonify({"error": "Missing token"}), 401
+    
     user_id = decode_jwt_token(token)
     if not user_id:
         return jsonify({"error": "Invalid or missing token"}), 401
 
     data = request.get_json()
     print(f"Syncing data for user: {user_id}")
-    print(data)
+    print(f"Data received: {data}")
+    sync_user_settings(user_id, data)
 
     # TODO: save data to DB here
 

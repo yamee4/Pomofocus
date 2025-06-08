@@ -2,15 +2,7 @@ import React from "react";
 import TaskItem from "./TaskItem";
 import styles from "../css/TaskList.module.css";
 
-const TaskList = ({ userLogin ,tasks, onUpdateTask, onDeleteTask, onToggleTaskCompletion, onSelectTask, activeTaskId, listTitle, isCompletedList = false}) => {
-
-  const fetchTasks = () => {
-    if (!tasks || tasks.length === 0) {
-      return [];
-    }
-    return tasks.filter(task => isCompletedList ? task.is_completed : !task.is_completed);
-  }
-
+const TaskList = ({tasks, onUpdateTask, onDeleteTask, onToggleTaskCompletion, onSelectTask, activeTaskId, listTitle, isCompletedList = false}) => {
 
   if(!tasks || tasks.length === 0) {
     return listTitle === "To Do" && !isCompletedList ? (

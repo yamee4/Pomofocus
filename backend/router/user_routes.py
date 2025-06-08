@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, make_response
-from services.user_services import register_user, login_user, get_user_by_id
+from services.user_services import register_user, login_user, get_user_by_id, get_user_settings, update_user_settings
 from services.auth_services import create_jwt_token, decode_jwt_token
 
 
@@ -96,3 +96,62 @@ def logout_user():
     response = make_response(jsonify({"message": "Logged out successfully"}))
     response.set_cookie('token', '', expires=0)
     return response
+
+@user_bp.route('/settings', methods=['GET'])
+def get_settings():
+    token = request.cookies.get('token')
+    if not token:
+        return jsonify({"error": "Token is missing"}), 401
+
+    user_id = decode_jwt_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired token"}), 401
+
+    # Assuming you have a function to get user settings by user ID
+    user_settings = get_user_settings(user_id)
+    if not user_settings:
+        return jsonify({"error": "User settings not found"}), 404
+
+    return jsonify({
+        "settings": {
+            "pomodoro_duration": user_settings.pomodoro_duration,
+            "short_break_duration": user_settings.short_break_duration,
+            "long_break_duration": user_settings.long_break_duration,
+            "long_break_interval": user_settings.long_break_interval,
+            "auto_start_pomodoros": user_settings.auto_start_pomodoros,
+            "auto_start_breaks": user_settings.auto_start_breaks,
+            "notifications_enabled": user_settings.notifications_enabled
+        }   
+    })
+
+@user_bp.route('/update_settings', methods=['PUT'])
+def update_settings():
+    token = request.cookies.get('token')
+    if not token:
+        return jsonify({"error": "Token is missing"}), 401
+
+    user_id = decode_jwt_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired token"}), 401
+
+    data = request.json
+    if not data:
+        return jsonify({"error": "No settings data provided"}), 400
+
+    # Assuming you have a function to update user settings
+    updated_settings = update_user_settings(user_id, data)
+    if not updated_settings:
+        return jsonify({"error": "Failed to update settings"}), 500
+
+    return jsonify({
+        "message": "Settings updated successfully",
+        "settings": {
+            "pomodoro_duration": updated_settings.pomodoro_duration,
+            "short_break_duration": updated_settings.short_break_duration,
+            "long_break_duration": updated_settings.long_break_duration,
+            "long_break_interval": updated_settings.long_break_interval,
+            "auto_start_pomodoros": updated_settings.auto_start_pomodoros,
+            "auto_start_breaks": updated_settings.auto_start_breaks,
+            "notifications_enabled": updated_settings.notifications_enabled
+        }
+    })

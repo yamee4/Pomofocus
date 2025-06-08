@@ -65,6 +65,19 @@ class UserSettings(db.Model):
 
     user = db.relationship('User', backref=db.backref('settings', lazy=True))
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'pomodoro_duration': self.pomodoro_duration,
+            'short_break_duration': self.short_break_duration,
+            'long_break_duration': self.long_break_duration,
+            'long_break_interval': self.long_break_interval,
+            'auto_start_breaks': self.auto_start_breaks,
+            'auto_start_pomodoros': self.auto_start_pomodoros,
+            'notifications_enabled': self.notifications_enabled
+        }
+
 class DailySummary(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

@@ -41,7 +41,6 @@ const TaskManager = ({  isLogin, tasks, onAddTask, onUpdateTask, onDeleteTask, o
 
       {/* Unfinished Tasks */}
       <TaskList
-        userLogin={isLogin}
         tasks={unfinishedTasks}
         onUpdateTask={onUpdateTask}
         onDeleteTask={onDeleteTask}

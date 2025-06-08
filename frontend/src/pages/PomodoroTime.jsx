@@ -8,6 +8,7 @@ import Report from '../components/Report';
 import TaskManager from '../components/TaskManager'; 
 import LoginRequiredModal from '../components/LoginRequiredModal';
 import { useTimer, MODE } from '../hooks/useTimer';
+import { syncSettings, getSettings } from '../utils/settingsUtils';
 import styles from '../css/pages_css/pomodoro.module.css';
 
 import axios from 'axios';
@@ -19,6 +20,10 @@ const DEFAULT_SETTINGS = {
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
   longBreakInterval: 4,
+  autoStartNext: false,
+  autoStartPomodoro: false,
+  showNotifications: false,
+  
 };
 
 function PomodoroTime() {
@@ -50,13 +55,20 @@ function PomodoroTime() {
   };
 
   const loadSettings = () => {
-    const saved = localStorage.getItem('pomofocusSettings');
-    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    if(userLogin) {
+      return getSettings().catch(() => DEFAULT_SETTINGS);
+    }
+    else{
+      const savedSettings = localStorage.getItem('pomofocusSettings');
+      return savedSettings ? JSON.parse(savedSettings) : DEFAULT_SETTINGS;
+    }
   };
 
   const [settings, setSettings] = useState(loadSettings());
   const [showSettings, setShowSettings] = useState(false);
   const [showReport, setShowReport] = useState(false);
+
+  const [refreshFlag, setRefreshFlag] = useState(true);
 
   // Initialize tasks state - this will be managed within PomodoroTime
   const [tasks, setTasks] = useState([]);
@@ -122,32 +134,63 @@ function PomodoroTime() {
     }
   });
 
+
   useEffect(() => {
     // Check if the user is logged in
     checkAuth();
   }, []);
 
 
-  useEffect(() => {
-    if (userLogin) {
-      axios.get(`${apiURL}/api/task/get_tasks`, {
+  const fetchTasks = async () => {
+    try {
+      const response = await axios.get(`${apiURL}/api/task/get_tasks`, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
         },
-      }).then(response => {
-        console.log('Fetched tasks:', response.data);
-        setTasks(response.data);
-      }).catch(error => {
-        console.error('Error fetching tasks:', error);
       });
+      if (response.status === 200) {
+        setTasks(response.data || []);
+      } else {
+        console.error('Failed to fetch tasks:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      // if (error.response && error.response.status === 401) {
+      //   setUserLogin(false);
+      //   setShowLoginModal(true);
+      // } else {
+      //   setUserLogin(false);
+      //   setShowLoginModal(true);
+      // }
     }
-  }, [userLogin]);
+  };
+
+
+  useEffect(() => {
+    fetchTasks();
+  }, [refreshFlag]);
+
+  const refreshTasks = () => {
+    setRefreshFlag(prev => !prev);
+  };
+
+
+  useEffect(() => {
+    if (userLogin) {
+      // If user is logged in, sync settings with the server
+      syncSettings(settings).catch(error => {
+        console.error("Error syncing settings:", error);
+      });
+    } else {
+      // If not logged in, save settings to localStorage
+      localStorage.setItem('pomofocusSettings', JSON.stringify(settings));
+    }
+  }, [settings, userLogin]);
 
   
 
   useEffect(() => {
-    localStorage.setItem('pomofocusSettings', JSON.stringify(settings));
     localStorage.setItem('pomofocusTasks', JSON.stringify(tasks)); // Save tasks
     localStorage.setItem('pomofocusSessions', JSON.stringify(allSessions)); // Save sessions
 
@@ -199,6 +242,7 @@ function PomodoroTime() {
       };
       setTasks(prevTasks => [newTask, ...prevTasks]); // Add to top
     }
+    refreshTasks();
   };
 
   const updateTask = async (updatedTask) => {
@@ -209,6 +253,7 @@ function PomodoroTime() {
       setTasks(prevTasks =>
         prevTasks.map(task => (task.id === updatedTask.id ? updatedTask : task))
       );
+      refreshTasks();
     } catch (error) {
       console.error('Error updating task:', error);
     }
@@ -223,6 +268,7 @@ function PomodoroTime() {
       if (activeTaskId === taskId) {
         setActiveTaskId(null);
       }
+      refreshTasks();
     } catch (error) {
       console.error('Error deleting task:', error);
     }
@@ -241,13 +287,15 @@ function PomodoroTime() {
             : task
         )
       );
-
+      
       if (activeTaskId === taskId) {
         const task = tasks.find(t => t.id === taskId);
         if (task && task.completed) {
           setActiveTaskId(null);
         }
       }
+
+      refreshTasks();
     } catch (error) {
       console.error('Error toggling task completion:', error);
     }
@@ -410,6 +458,7 @@ function PomodoroTime() {
           initialSettings={settings}
           onSave={handleSaveSettings}
           onClose={() => setShowSettings(false)}
+          isLogin={userLogin}
         />
       )}
 
