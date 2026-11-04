@@ -56,18 +56,30 @@ def update_user_settings(user_id, settings_data):
     try:
         user_settings = UserSettings.query.filter_by(user_id=user_id).first()
         if not user_settings:
-            print("User settings not found, creating new settings.")
             return None
 
-        for key, value in settings_data.items():
-            setattr(user_settings, key, value)
+        # Mapping input keys to model fields
+        mapping = {
+            "workMinutes": "pomodoro_duration",
+            "shortBreakMinutes": "short_break_duration",
+            "longBreakMinutes": "long_break_duration",
+            "longBreakInterval": "long_break_interval",
+            "autoStartNext": "auto_start_breaks",
+            "autoStartPomodoro": "auto_start_pomodoros",
+            "showNotifications": "notifications_enabled",
+        }
 
-        db.session.add(user_settings)
+        for input_key, model_attr in mapping.items():
+            if input_key in settings_data:
+                setattr(user_settings, model_attr, settings_data[input_key])
+
         db.session.commit()
-        return user_settings
+        return user_settings.to_dict()
+
     except Exception as e:
         print(f"Error updating user settings: {e}")
         return None
+
 
 
 

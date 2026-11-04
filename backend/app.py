@@ -1,10 +1,11 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_migrate import Migrate
 from extensions import db
 from router import register_routes
 from dotenv import load_dotenv
 
-
+migrate = Migrate()  # Initialize globally so CLI works
 
 def create_app():
     app = Flask(__name__)
@@ -19,6 +20,7 @@ def create_app():
 
     # Initialize extensions
     db.init_app(app)
+    migrate.init_app(app, db)  # Initialize Flask-Migrate with the app and db
 
     # Register routes
     register_routes(app)

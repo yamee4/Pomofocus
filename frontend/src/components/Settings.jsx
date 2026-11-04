@@ -27,6 +27,7 @@ const Settings = ({ initialSettings, onSave, onClose, isLogin}) => {
             if (isLogin) {
                 // Send to backend
                 const response = await updateSettings(settings);
+                console.log("Settings updated:", response);
                 if (response.error) {
                     console.error("Error updating settings:", response.error);
                     alert("Failed to save settings. Please try again.");

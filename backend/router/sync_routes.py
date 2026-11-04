@@ -26,8 +26,7 @@ def sync_settings():
         return jsonify({"error": "Invalid or missing token"}), 401
 
     data = request.get_json()
-    print(f"Syncing data for user: {user_id}")
-    print(f"Data received: {data}")
+
     sync_user_settings(user_id, data)
 
     # TODO: save data to DB here

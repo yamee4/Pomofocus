@@ -29,6 +29,7 @@ const DEFAULT_SETTINGS = {
 function PomodoroTime() {
   const navigate = useNavigate();
   const [userLogin, setUserLogin] = useState(false);
+  const [hasSyncedSettings, setHasSyncedSettings] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
 
@@ -47,6 +48,7 @@ function PomodoroTime() {
         setUserLogin(true);
       } else {
         setUserLogin(false);
+        
       }
     } catch (error) {
       console.error('Error checking authentication:', error);
@@ -54,9 +56,24 @@ function PomodoroTime() {
     }
   };
 
-  const loadSettings = () => {
+  const loadSettings = async () => {
     if(userLogin) {
-      return getSettings().catch(() => DEFAULT_SETTINGS);
+      const resSettings = getSettings();
+      // If the user is logged in, fetch settings from the server
+      console.log("Fetching settings from server...");
+      console.log(resSettings);
+      return resSettings
+        .then(settings => {
+          if (settings.error) {
+            console.error("Error fetching settings:", settings.error);
+            return DEFAULT_SETTINGS; // Fallback to default settings
+          }
+          return settings;
+        })
+        .catch(error => {
+          console.error("Error fetching settings:", error);
+          return DEFAULT_SETTINGS; // Fallback to default settings
+        });
     }
     else{
       const savedSettings = localStorage.getItem('pomofocusSettings');
@@ -138,8 +155,16 @@ function PomodoroTime() {
   useEffect(() => {
     // Check if the user is logged in
     checkAuth();
+    setSettings(prevSettings => ({
+      ...prevSettings,
+      ...DEFAULT_SETTINGS, // Merge with default settings
+    }));
+    // Load tasks from localStorage or server
   }, []);
 
+  useEffect(() => {
+    resetTimer();
+  }, [settings, resetTimer]);
 
   const fetchTasks = async () => {
     try {
@@ -185,12 +210,14 @@ function PomodoroTime() {
     } else {
       // If not logged in, save settings to localStorage
       localStorage.setItem('pomofocusSettings', JSON.stringify(settings));
+
     }
   }, [settings, userLogin]);
 
   
 
   useEffect(() => {
+    localStorage.setItem('pomofocusSettings', JSON.stringify(settings)); // Save settings to localStorage
     localStorage.setItem('pomofocusTasks', JSON.stringify(tasks)); // Save tasks
     localStorage.setItem('pomofocusSessions', JSON.stringify(allSessions)); // Save sessions
 

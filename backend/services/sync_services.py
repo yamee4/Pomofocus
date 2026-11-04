@@ -6,42 +6,35 @@ from flask import request, jsonify
 
 def sync_user_settings(user_id, data):
     """
-    Sync or create user settings in the database.
+    Create user settings only if they don't exist (one-time sync).
     """
     try:
-        # Expect 'setting' to be a key in the received JSON
         settings_data = data.get("setting")
-        
         if not settings_data:
             return {"error": "No 'setting' object provided"}, 400
 
-        user_settings = UserSettings.query.filter_by(user_id=user_id).first()
+    
+        # Check if user settings already exist
+        existing_settings = UserSettings.query.filter_by(user_id=user_id).first()
+        print("Existing settings:", existing_settings)
+        if existing_settings:
+            return {"message": "User settings already exist, skipping sync"}, 400
 
-        if user_settings:
-            # Update existing settings
-            user_settings.pomodoro_duration = settings_data.get("workMinutes", user_settings.pomodoro_duration)
-            user_settings.short_break_duration = settings_data.get("shortBreakMinutes", user_settings.short_break_duration)
-            user_settings.long_break_duration = settings_data.get("longBreakMinutes", user_settings.long_break_duration)
-            user_settings.long_break_interval = settings_data.get("longBreakInterval", user_settings.long_break_interval)
-            user_settings.auto_start_breaks = settings_data.get("autoStartNext", user_settings.auto_start_breaks)
-            user_settings.auto_start_pomodoros = settings_data.get("autoStartPomodoro", user_settings.auto_start_pomodoros)
-            user_settings.notifications_enabled = settings_data.get("showNotifications", user_settings.notifications_enabled)
-        else:
-            # Create new settings
-            user_settings = UserSettings(
-                user_id=user_id,
-                pomodoro_duration=settings_data.get("workMinutes", 25),
-                short_break_duration=settings_data.get("shortBreakMinutes", 5),
-                long_break_duration=settings_data.get("longBreakMinutes", 15),
-                long_break_interval=settings_data.get("longBreakInterval", 4),
-                auto_start_breaks=settings_data.get("autoStartNext", True),
-                auto_start_pomodoros=settings_data.get("autoStartPomodoro", True),
-                notifications_enabled=settings_data.get("showNotifications", True),
-            )
-            db.session.add(user_settings)
-
+        # Create new settings
+        user_settings = UserSettings(
+            user_id=user_id,
+            pomodoro_duration=settings_data.get("workMinutes", 25),
+            short_break_duration=settings_data.get("shortBreakMinutes", 5),
+            long_break_duration=settings_data.get("longBreakMinutes", 15),
+            long_break_interval=settings_data.get("longBreakInterval", 4),
+            auto_start_breaks=settings_data.get("autoStartNext", True),
+            auto_start_pomodoros=settings_data.get("autoStartPomodoro", True),
+            notifications_enabled=settings_data.get("showNotifications", True),
+        )
+        db.session.add(user_settings)
         db.session.commit()
-        return {"message": "User settings synced successfully"}, 200
+
+        return {"message": "User settings synced (first-time)"}, 201
 
     except Exception as e:
         print("Error during syncing user settings:", e)

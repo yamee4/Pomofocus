@@ -18,6 +18,7 @@ class Task(db.Model):
     due_date = db.Column(db.DateTime, nullable=True)
     priority = db.Column(db.String(10), nullable=True)  # e.g., 'low', 'medium', 'high'
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    completed_at = db.Column(db.DateTime, nullable=True)
     updated_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -51,6 +52,20 @@ class PomodoroSession(db.Model):
 
     task = db.relationship('Task', backref=db.backref('pomodoro_sessions', lazy=True))
     user = db.relationship('User', backref=db.backref('pomodoro_sessions', lazy=True))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'task_id': self.task_id,
+            'start_time': self.start_time.isoformat(),
+            'end_time': self.end_time.isoformat() if self.end_time else None,
+            'duration_minutes': self.duration_minutes,
+            'type': self.type,
+            'is_completed': self.is_completed,
+            'is_interrupted': self.is_interrupted,
+            'notes': self.notes
+        }
 
 class UserSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)

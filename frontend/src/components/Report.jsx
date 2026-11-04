@@ -28,21 +28,22 @@ const Report = ({ initialSessions = [], initialTasks = [] , onClose}) => {
     : 0;
 
   const filteredTasks = useMemo(() => {
-    if (!initialTasks.length || !processedSessions.length) return [];
-    const sessionDates = processedSessions.map(s => new Date(s.date)).filter(d => !isNaN(d));
-    if (!sessionDates.length) return initialTasks;
+    // if (!initialTasks.length || !processedSessions.length) return [];
+    // const sessionDates = processedSessions.map(s => new Date(s.date)).filter(d => !isNaN(d));
+    // if (!sessionDates.length) return initialTasks;
+    return initialTasks.filter(task => task.is_completed);
 
-    const reportStartDate = new Date(Math.min(...sessionDates));
-    const reportEndDate = new Date(Math.max(...sessionDates));
-    reportEndDate.setHours(23, 59, 59, 999);
+    // const reportStartDate = new Date(Math.min(...sessionDates));
+    // const reportEndDate = new Date(Math.max(...sessionDates));
+    // reportEndDate.setHours(23, 59, 59, 999);
 
-    return initialTasks
-      .filter(task => {
-        if (!task.date) return false;
-        const taskDate = new Date(task.date);
-        return taskDate >= reportStartDate && taskDate <= reportEndDate;
-      })
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
+    // return initialTasks
+    //   .filter(task => {
+    //     if (!task.date) return false;
+    //     const taskDate = new Date(task.date);
+    //     return taskDate >= reportStartDate && taskDate <= reportEndDate;
+    //   })
+    //   .sort((a, b) => new Date(b.date) - new Date(a.date));
   }, [processedSessions, initialTasks]);
 
   const SummaryCard = ({ title, value, icon, color }) => (
@@ -129,14 +130,13 @@ const Report = ({ initialSessions = [], initialTasks = [] , onClose}) => {
                 <div key={task.id} className={styles.taskItem}>
                   <div className={styles.taskHeader}>
                     <div>
-                      <h3 className="font-medium text-gray-800">{task.name}</h3>
-                      <p className="text-xs text-gray-500">
-                        {task.project && `${task.project} • `}
-                        {formatDate(task.date)} • {task.pomodoros} pomodoro{task.pomodoros > 1 ? 's' : ''}
-                      </p>
+                      <h3>{task.title}</h3>
+                        <p>
+                          {formatDate(task.completed_at || task.due_date)} • {task.completed_pomodoro} pomodoro{task.completed_pomodoro > 1 ? 's' : ''}
+                        </p>
                     </div>
-                    <span className={`${styles.statusBadge} ${task.status === 'completed' ? styles.completed : styles.pending}`}>
-                      {task.status || 'pending'}
+                    <span className={`${styles.statusBadge} ${task.is_completed ? styles.completed : styles.pending}`}>
+                      {task.is_completed || 'pending'}
                     </span>
                   </div>
                 </div>

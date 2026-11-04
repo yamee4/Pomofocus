@@ -146,12 +146,12 @@ def update_settings():
     return jsonify({
         "message": "Settings updated successfully",
         "settings": {
-            "pomodoro_duration": updated_settings.pomodoro_duration,
-            "short_break_duration": updated_settings.short_break_duration,
-            "long_break_duration": updated_settings.long_break_duration,
-            "long_break_interval": updated_settings.long_break_interval,
-            "auto_start_pomodoros": updated_settings.auto_start_pomodoros,
-            "auto_start_breaks": updated_settings.auto_start_breaks,
-            "notifications_enabled": updated_settings.notifications_enabled
+            "pomodoro_duration": updated_settings["pomodoro_duration"],
+            "short_break_duration": updated_settings["short_break_duration"],
+            "long_break_duration": updated_settings["long_break_duration"],
+            "long_break_interval": updated_settings["long_break_interval"],
+            "auto_start_breaks": updated_settings["auto_start_breaks"],
+            "auto_start_pomodoros": updated_settings["auto_start_pomodoros"],
+            "notifications_enabled": updated_settings["notifications_enabled"],
         }
     })
